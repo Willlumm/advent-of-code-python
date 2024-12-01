@@ -1,6 +1,6 @@
 from aoc.utils import calculate_similarity, calculate_total_distance, read_input_file
 
-INPUT_FILEPATH = "aoc/year_2024/day_01/input"
+INPUT_FILEPATH = "data/2024_01"
 
 
 def _prepare_lists(filepath: str) -> tuple[list[int], list[int]]:
