@@ -1,4 +1,4 @@
-from aoc.utils import calculate_total_distance, read_input_file
+from aoc.utils import calculate_similarity, calculate_total_distance, read_input_file
 
 
 def test_read_input_file() -> None:
@@ -14,3 +14,8 @@ def test_calculate_total_distance() -> None:
     expected = 11
     actual = calculate_total_distance(input_list1, input_list2)
     assert actual == expected
+
+
+def test_calculate_similarity() -> None:
+    expected = 31
+    assert calculate_similarity([3, 4, 2, 1, 3, 3], [4, 3, 5, 3, 9, 3]) == expected
