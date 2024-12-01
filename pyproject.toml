@@ -23,8 +23,8 @@ exclude_also = [
 branch = true
 
 [tool.mypy]
-mypy_path = ["advent_of_code", "tests"]
-files = ["advent_of_code", "tests"]
+mypy_path = ["aoc", "tests"]
+files = ["aoc", "tests"]
 strict = true
 
 [tool.pytest.ini_options]
