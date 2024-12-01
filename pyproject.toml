@@ -29,7 +29,7 @@ strict = true
 
 [tool.pytest.ini_options]
 addopts = "--cov=aoc"
-pythonpath = ["advent_of_code"]
+pythonpath = ["."]
 testpaths = ["tests"]
 
 [tool.ruff]
