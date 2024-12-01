@@ -1,0 +1,47 @@
+[project]
+name = "advent-of-code-python"
+version = "0.0.0"
+description = "My Advent of Code solutions."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "mypy>=1.13.0",
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.8.1",
+]
+
+[tool.coverage.run]
+branch = true
+
+[tool.mypy]
+mypy_path = ["advent_of_code", "tests"]
+files = ["advent_of_code", "tests"]
+strict = true
+
+[tool.pytest.ini_options]
+addopts = "--cov=aoc"
+pythonpath = ["advent_of_code"]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "COM812",           # Ignore absence of trailing commas, causes conflicts with formatter
+    "D",                # Ignore docstring rules
+    "ISC001",           # Ignore implicit string concatenation, causes conflicts with formatter
+    "T20"               # Ignore print rules
+]
+fixable = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]    # Ignore asserts in tests
+
+[tool.uv]
+default-groups = []     # Only install project dependencies by default
