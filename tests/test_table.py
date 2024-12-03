@@ -2,7 +2,7 @@ from typing import Any
 
 import pytest
 
-from aoc.table import Table
+from advent_of_code.table import Table
 
 
 def test_cast_column() -> None:

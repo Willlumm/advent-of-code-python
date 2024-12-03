@@ -1,4 +1,4 @@
-from aoc.year_2024.day_01.__main__ import _prepare_lists, part1, part2
+from advent_of_code.year_2024.day_01 import _prepare_lists, part1, part2
 
 
 def test__prepare_lists() -> None:

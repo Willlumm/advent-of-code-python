@@ -1,7 +1,7 @@
 from collections import Counter
 from pathlib import Path
 
-from aoc.table import Table
+from advent_of_code.table import Table
 
 
 def read_input_file(filepath: str) -> Table:

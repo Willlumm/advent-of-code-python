@@ -1,6 +1,11 @@
 import pytest
 
-from aoc.year_2024.day_02.__main__ import _is_safe, _prepare_data, part1, part2
+from advent_of_code.year_2024.day_02 import (
+    _is_safe,
+    _prepare_data,
+    part1,
+    part2,
+)
 
 
 def test__prepare_data() -> None:

@@ -24,12 +24,12 @@ show_missing=true
 branch = true
 
 [tool.mypy]
-mypy_path = ["aoc", "tests"]
-files = ["aoc", "tests"]
+mypy_path = ["advent_of_code", "tests"]
+files = ["advent_of_code", "tests"]
 strict = true
 
 [tool.pytest.ini_options]
-addopts = "--cov=aoc"
+addopts = "--cov=advent_of_code"
 pythonpath = ["."]
 testpaths = ["tests"]
 

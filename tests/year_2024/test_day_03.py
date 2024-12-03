@@ -1,4 +1,10 @@
-from aoc.year_2024.day_03 import _filter_data, _prepare_data, _sum_muls, part1, part2
+from advent_of_code.year_2024.day_03 import (
+    _filter_data,
+    _prepare_data,
+    _sum_muls,
+    part1,
+    part2,
+)
 
 
 def test__prepare_data() -> None:

@@ -1,4 +1,8 @@
-from aoc.utils import calculate_similarity, calculate_total_distance, read_input_file
+from advent_of_code.utils import (
+    calculate_similarity,
+    calculate_total_distance,
+    read_input_file,
+)
 
 
 def test_read_input_file() -> None:
