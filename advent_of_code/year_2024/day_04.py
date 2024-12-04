@@ -42,7 +42,7 @@ def _search_grid(data: list[str], chars: str, patterns: list[Pattern]) -> int:
         y_max = len(row)
         for y, _ in enumerate(row):
             for pattern in patterns:
-                for char, (dx, dy) in zip(chars, pattern, strict=False):
+                for char, (dx, dy) in zip(chars, pattern, strict=True):
                     if not (x_max > x + dx >= 0 and y_max > y + dy >= 0):
                         break
                     if data[x + dx][y + dy] != char:
