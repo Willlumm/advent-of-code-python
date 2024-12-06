@@ -46,10 +46,23 @@ class Map:
     ) -> None:
         self.width = width
         self.height = height
+        self.start = start
         self.position = start
         self.direction = Direction.UP
         self.obstacles = obstacles
-        self.visited: set[Coords] = set()
+        self.previous_states: set[tuple[Coords, Direction]] = set()
+
+    @property
+    def is_in_area(self) -> bool:
+        return self.width > self.position.x >= 0 and self.height > self.position.y >= 0
+
+    @property
+    def is_stuck(self) -> bool:
+        return (self.position, self.direction) in self.previous_states
+
+    @property
+    def visited(self) -> set[Coords]:
+        return {coords for coords, _ in self.previous_states}
 
     @property
     def total_visited(self) -> int:
@@ -70,13 +83,18 @@ class Map:
         return cls(height, width, start, obstacles)
 
     def simulate(self) -> None:
-        while self.width > self.position.x >= 0 and self.height > self.position.y >= 0:
-            self.visited.add(self.position)
+        while self.is_in_area and not self.is_stuck:
+            self.previous_states.add((self.position, self.direction))
             next_position = self.position.move(self.direction)
             if next_position in self.obstacles:
                 self.direction = self.direction.rotate_clockwise()
             else:
                 self.position = next_position
+
+    def reset(self) -> None:
+        self.position = self.start
+        self.direction = Direction.UP
+        self.previous_states.clear()
 
 
 def part1(filepath: str) -> int:
@@ -86,5 +104,20 @@ def part1(filepath: str) -> int:
     return map_.total_visited
 
 
+def part2(filepath: str) -> int:
+    data = _read_input(filepath)
+    map_ = Map.from_str(data)
+    total = 0
+    map_.simulate()
+    for coords in map_.visited:
+        map_.reset()
+        map_.obstacles.add(coords)
+        map_.simulate()
+        total += map_.is_stuck
+        map_.obstacles.remove(coords)
+    return total
+
+
 if __name__ == "__main__":
     print(f"Part 1: {part1(INPUT_FILEPATH):>20}")
+    print(f"Part 2: {part2(INPUT_FILEPATH):>20}")

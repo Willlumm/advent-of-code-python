@@ -2,7 +2,7 @@ from textwrap import dedent
 
 import pytest
 
-from advent_of_code.year_2024.day_06 import Coords, Map, part1
+from advent_of_code.year_2024.day_06 import Coords, Map, part1, part2
 
 TEST_DATA_FILEPATH = "tests/data/2024_06"
 
@@ -49,8 +49,12 @@ class TestMap:
         assert actual.height == map_.height
         assert actual.position == map_.position
         assert actual.obstacles == map_.obstacles
-        assert actual.visited == map_.visited
+        assert actual.previous_states == map_.previous_states
 
 
 def test_part1() -> None:
     assert part1(TEST_DATA_FILEPATH) == 41
+
+
+def test_part2() -> None:
+    assert part2(TEST_DATA_FILEPATH) == 6
