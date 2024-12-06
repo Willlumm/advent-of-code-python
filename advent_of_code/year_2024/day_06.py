@@ -1,7 +1,7 @@
 from enum import Enum
 from pathlib import Path
-from typing import Self
 from time import perf_counter
+from typing import Self
 
 INPUT_FILEPATH = "data/2024_06"
 
@@ -41,6 +41,10 @@ class Coords(XY):
         return type(self)(self.x + direction.x, self.y + direction.y)
 
 
+class State(tuple[Coords, Direction]):
+    __slots__ = ()
+
+
 class Map:
     def __init__(
         self, width: int, height: int, start: Coords, obstacles: set[Coords]
@@ -51,7 +55,7 @@ class Map:
         self.position = start
         self.direction = Direction.UP
         self.obstacles = obstacles
-        self.previous_states: set[tuple[Coords, Direction]] = set()
+        self.previous_states: list[State] = []
 
     @property
     def is_in_area(self) -> bool:
@@ -85,16 +89,18 @@ class Map:
 
     def simulate(self) -> None:
         while self.is_in_area and not self.is_stuck:
-            self.previous_states.add((self.position, self.direction))
+            self.previous_states.append(State((self.position, self.direction)))
             next_position = self.position.move(self.direction)
             if next_position in self.obstacles:
                 self.direction = self.direction.rotate_clockwise()
             else:
                 self.position = next_position
 
-    def reset(self) -> None:
-        self.position = self.start
-        self.direction = Direction.UP
+    def reset(
+        self, start: Coords | None = None, direction: Direction = Direction.UP
+    ) -> None:
+        self.position = start if start else self.start
+        self.direction = direction
         self.previous_states.clear()
 
 
@@ -108,19 +114,25 @@ def part1(filepath: str) -> int:
 def part2(filepath: str) -> int:
     data = _read_input(filepath)
     map_ = Map.from_str(data)
-    total = 0
     map_.simulate()
-    for coords in map_.visited:
-        map_.reset()
+    states = map_.previous_states.copy()
+    map_.reset()
+    total = 0
+    tried_coords: set[Coords] = set()
+    for coords, direction in states:
+        if coords in tried_coords:
+            continue
         map_.obstacles.add(coords)
+        tried_coords.add(coords)
         map_.simulate()
         total += map_.is_stuck
         map_.obstacles.remove(coords)
+        map_.reset(start=coords, direction=direction)
+
     return total
 
 
 if __name__ == "__main__":
-
     # 0.1s
     start = perf_counter()
     part1_result = part1(INPUT_FILEPATH)
