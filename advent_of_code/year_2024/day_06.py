@@ -1,6 +1,7 @@
 from enum import Enum
 from pathlib import Path
 from typing import Self
+from time import perf_counter
 
 INPUT_FILEPATH = "data/2024_06"
 
@@ -119,5 +120,16 @@ def part2(filepath: str) -> int:
 
 
 if __name__ == "__main__":
-    print(f"Part 1: {part1(INPUT_FILEPATH):>20}")
-    print(f"Part 2: {part2(INPUT_FILEPATH):>20}")
+
+    # 0.1s
+    start = perf_counter()
+    part1_result = part1(INPUT_FILEPATH)
+    part1_time = perf_counter() - start
+    print(f"Part 1: {part1_result:>20,} {part1_time:>20.1f}s")
+
+    # 50.5s
+    start = perf_counter()
+    part2_result = part2(INPUT_FILEPATH)
+    part2_time = perf_counter() - start
+    print(f"Part 1: {part1_result:>20,} {part1_time:>20.1f}s")
+    print(f"Part 2: {part2_result:>20,} {part2_time:>20.1f}s")
