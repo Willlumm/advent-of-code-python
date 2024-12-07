@@ -35,12 +35,6 @@ class Equation:
     def required_operators(self) -> int:
         return len(self.numbers) - 1
 
-    def is_solvable(self, operators: tuple[Callable[[int, int], int], ...]) -> bool:
-        return any(
-            self._check_operator_combination(combination)
-            for combination in product(operators, repeat=self.required_operators)
-        )
-
     @classmethod
     def from_str(cls, data: str) -> Self:
         total_str, numbers_str = data.split(": ")
@@ -53,6 +47,12 @@ class Equation:
         for number, operator in zip(self.numbers[1:], operators, strict=True):
             total = operator(total, number)
         return total == self.total
+
+    def is_solvable(self, operators: tuple[Callable[[int, int], int], ...]) -> bool:
+        return any(
+            self._check_operator_combination(combination)
+            for combination in product(operators, repeat=self.required_operators)
+        )
 
 
 class EquationList(list[Equation]):
