@@ -79,11 +79,13 @@ def part2(filepath: str) -> int:
 
 
 if __name__ == "__main__":
+    # 1.1s
     start = perf_counter()
     part1_result = part1(INPUT_FILEPATH)
     part1_time = perf_counter() - start
     print(f"Part 1: {part1_result:>20} {part1_time:>20.1f}s")
 
+    # 81.5s
     start = perf_counter()
     part2_result = part2(INPUT_FILEPATH)
     part2_time = perf_counter() - start
