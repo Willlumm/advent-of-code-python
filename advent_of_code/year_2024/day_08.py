@@ -1,6 +1,5 @@
 from collections import defaultdict
-from collections.abc import Iterable
-from itertools import chain, combinations
+from itertools import combinations
 from pathlib import Path
 from time import perf_counter
 from typing import Self
@@ -26,10 +25,39 @@ class XY:
     def __hash__(self) -> int:
         return hash((self.x, self.y))
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, type(self)):
+    def __len__(self) -> int:
+        return 2
+
+    def _check_comparable(self, other: object) -> None:
+        if isinstance(other, type(self)):
+            return
+        if not isinstance(other, tuple):
             raise NotImplementedError
+        if len(other) != len(self):
+            raise NotImplementedError
+        x, y = other
+        if not (isinstance(x, int) and isinstance(y, int)):
+            raise NotImplementedError
+
+    def __eq__(self, other: object) -> bool:
+        self._check_comparable(other)
         return self.__hash__() == other.__hash__()
+
+    def __gt__(self, other: tuple[int, int]) -> bool:
+        self._check_comparable(other)
+        return self.x > other[0] and self.y > other[1]
+
+    def __ge__(self, other: tuple[int, int]) -> bool:
+        self._check_comparable(other)
+        return self.x >= other[0] and self.y >= other[1]
+
+    def __lt__(self, other: tuple[int, int]) -> bool:
+        self._check_comparable(other)
+        return self.x < other[0] and self.y < other[1]
+
+    def __le__(self, other: tuple[int, int]) -> bool:
+        self._check_comparable(other)
+        return self.x <= other[0] and self.y <= other[1]
 
     def __add__(self, other: Self) -> Self:
         cls = type(self)
@@ -54,26 +82,7 @@ class XY:
 
 
 class XYSet(set[XY]):
-    @classmethod
-    def _get_antinodes(cls, xy1: XY, xy2: XY) -> Self:
-        dxy = xy1 - xy2
-        return cls((xy1 + dxy, xy2 - dxy))
-
-    @classmethod
-    def combine(cls, sets: Iterable[Self]) -> Self:
-        return cls(chain(*sets))
-
-    def get_antinodes(self) -> Self:
-        cls = type(self)
-        return cls.combine(
-            cls._get_antinodes(a1, a2) for a1, a2 in combinations(self, 2)
-        )
-
-    def filter_within(
-        self, x_max: int, y_max: int, x_min: int = 0, y_min: int = 0
-    ) -> Self:
-        cls = type(self)
-        return cls(xy for xy in self if xy.is_within(x_max, y_max, x_min, y_min))
+    pass
 
 
 class Map:
@@ -94,22 +103,60 @@ class Map:
                     antennas[value].add(XY(x, y))
         return cls(width, height, antennas)
 
-    @property
-    def antinodes(self) -> XYSet:
-        return XYSet.combine(
-            antennas.get_antinodes() for antennas in self.antennas.values()
-        ).filter_within(self.width, self.height)
+    def _get_new_antinodes(self, antenna1: XY, antenna2: XY) -> XYSet:
+        dxy = antenna1 - antenna2
+        return XYSet(
+            node
+            for node in (antenna1 + dxy, antenna2 - dxy)
+            if node.is_within(self.width, self.height, 0, 0)
+        )
+
+    def _get_new_antinodes_with_resonant_harmonics(
+        self, antenna1: XY, antenna2: XY
+    ) -> XYSet:
+        antinodes = XYSet()
+        dxy = antenna1 - antenna2
+        while (self.height, self.width) > antenna1 >= (0, 0):
+            antinodes.add(antenna1)
+            antenna1 += dxy
+        while (self.height, self.width) > antenna2 >= (0, 0):
+            antinodes.add(antenna2)
+            antenna2 -= dxy
+        return antinodes
+
+    def get_antinodes(self, *, resonant_harmonics: bool = False) -> XYSet:
+        antinodes = XYSet()
+        for antennas in self.antennas.values():
+            for a1, a2 in combinations(antennas, 2):
+                antinodes |= (
+                    self._get_new_antinodes_with_resonant_harmonics(a1, a2)
+                    if resonant_harmonics
+                    else self._get_new_antinodes(a1, a2)
+                )
+        return antinodes
 
 
 def part1(filepath: str) -> int:
     data = _read_input(filepath)
     map_ = Map.from_str(data)
-    return len(map_.antinodes)
+    return len(map_.get_antinodes())
+
+
+def part2(filepath: str) -> int:
+    data = _read_input(filepath)
+    map_ = Map.from_str(data)
+    return len(map_.get_antinodes(resonant_harmonics=True))
 
 
 if __name__ == "__main__":
     # 0.0s
     start = perf_counter()
-    part1_result = part1(INPUT_FILEPATH)
-    part1_time = perf_counter() - start
-    print(f"Part 1: {part1_result:>20,} {part1_time:>20.1f}s")
+    result = part1(INPUT_FILEPATH)
+    seconds = perf_counter() - start
+    print(f"Part 1: {result:>20,} {seconds:>20.1f}s")
+
+    # 0.0s
+    start = perf_counter()
+    result = part2(INPUT_FILEPATH)
+    seconds = perf_counter() - start
+    print(f"Part 1: {result:>20,} {seconds:>20.1f}s")
