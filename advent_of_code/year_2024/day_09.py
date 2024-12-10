@@ -100,7 +100,7 @@ if __name__ == "__main__":
     result = part1(INPUT_FILEPATH)
     seconds = perf_counter() - start
     print(f"Part 1: {result:>20} {seconds:>20.1f}s")
-    
+
     # 68.8s
     start = perf_counter()
     result = part2(INPUT_FILEPATH)
