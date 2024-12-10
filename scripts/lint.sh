@@ -1,4 +1,4 @@
 ruff format
 ruff check --fix
 ruff format
-mypy
+python -m mypy

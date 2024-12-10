@@ -54,4 +54,9 @@ fixable = ["ALL"]
 ]   
 
 [tool.uv]
+allow-insecure-host = [
+    "pypi.org",
+    "pypi.python.org",
+    "files.pythonhosted.org"
+]
 default-groups = []     # Only install project dependencies by default
