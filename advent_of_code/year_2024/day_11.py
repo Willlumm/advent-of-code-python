@@ -11,7 +11,7 @@ def read_input(filepath: str) -> str:
         return file.read()
 
 
-@cache
+# @cache
 def get_next(number: int) -> list[int]:
     if number == 0:
         return [1]
@@ -28,12 +28,20 @@ def get_next(number: int) -> list[int]:
     return next_numbers
 
 
-@cache
+# @cache
+
+sim_cache = {}
 def _simulate(number: int, i_max: int, i: int = 0) -> int:
+    input_args = (number, i_max, i)
+    if input_args in sim_cache:
+        return sim_cache[input_args]
     next_numbers = get_next(number)
     if i + 1 >= i_max:
-        return len(next_numbers)
-    return sum(_simulate(next_number, i_max, i + 1) for next_number in next_numbers)
+        result = len(next_numbers)
+    else:
+        result = sum(_simulate(next_number, i_max, i + 1) for next_number in next_numbers)
+    sim_cache[input_args] = result
+    return result
 
 
 class Stones:
