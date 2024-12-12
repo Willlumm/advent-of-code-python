@@ -11,7 +11,6 @@ def read_input(filepath: str) -> str:
         return file.read()
 
 
-@cache
 def get_next(number: int) -> list[int]:
     if number == 0:
         return [1]
@@ -67,4 +66,4 @@ if __name__ == "__main__":
     start = perf_counter()
     result = part2(INPUT_FILEPATH)
     seconds = perf_counter() - start
-    print(f"Part 1: {result:>20} {seconds:>20.1f}s")
+    print(f"Part 2: {result:>20} {seconds:>20.3f}s")
