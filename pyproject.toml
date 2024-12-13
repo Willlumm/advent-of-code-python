@@ -43,6 +43,7 @@ ignore = [
     "COM812",           # Ignore absence of trailing commas, causes conflicts with formatter
     "D",                # Ignore docstring rules
     "ISC001",           # Ignore implicit string concatenation, causes conflicts with formatter
+    "S311",             # Ignore pseudo-random generators
     "T20"               # Ignore print rules
 ]
 fixable = ["ALL"]
