@@ -22,7 +22,7 @@ class Direction(tuple[int, int], Enum):
         cls = type(self)
         x, y = self
         return [cls((-y, x)), cls((y, -x))]
-    
+
     @property
     def char(self) -> str:
         cls = type(self)
@@ -44,7 +44,6 @@ class Maze:
         self.height = height
         self.end = end
         self.walls = walls
-        
 
 
 class MazeState:
@@ -61,20 +60,6 @@ class MazeState:
         self.direction = direction
         self.visited = visited | {xy}
         self.maze = maze
-
-    @classmethod
-    def from_str(cls, data: str) -> Self:
-        walls = set()
-        for y, line in enumerate(data.split("\n")):
-            for x, value in enumerate(line):
-                if value == "#":
-                    walls.add((x, y))
-                elif value == "S":
-                    start = (x, y)
-                elif value == "E":
-                    end = (x, y)
-        maze = Maze(x + 1, y + 1, end, walls)
-        return cls(0, start, Direction.RIGHT, set(), maze)
 
     def new_state(self, score: int, xy: tuple[int, int], direction: Direction) -> Self:
         cls = type(self)
@@ -94,36 +79,76 @@ class MazeState:
     def is_finished(self) -> bool:
         return self.xy == self.maze.end
 
-    def get_winning_states(self) -> list[Self]:
-        states = []
-        print(self)
-        print(self.xy)
-        input()
-        for state in self.get_next_states():
-            if state.is_finished:
-                states.append(state)
-            else:
-                states += state.get_winning_states()
-        return states
-
-    @classmethod
-    def get_lowest_score(cls, states: list[Self]) -> int:
-        return min(state.score for state in states)
-    
     def __str__(self) -> str:
         grid = [[" "] * self.maze.width for _ in range(self.maze.height)]
         for x, y in self.maze.walls:
             grid[y][x] = "#"
         for x, y in self.visited:
             grid[y][x] = "."
+        grid[self.maze.end[1]][self.maze.end[0]] = "E"
         grid[self.xy[1]][self.xy[0]] = self.direction.char
         return "\n".join("".join(row) for row in grid)
 
 
+class MazeStateManager:
+    def __init__(self, states: list[MazeState]) -> None:
+        self.states = states
+
+    @classmethod
+    def from_str(cls, data: str) -> Self:
+        walls = set()
+        for y, line in enumerate(data.split("\n")):
+            for x, value in enumerate(line):
+                if value == "#":
+                    walls.add((x, y))
+                elif value == "S":
+                    start = (x, y)
+                elif value == "E":
+                    end = (x, y)
+        maze = Maze(x + 1, y + 1, end, walls)
+        maze_state = MazeState(0, start, Direction.RIGHT, set(), maze)
+        return cls([maze_state])
+
+    @property
+    def lowest_scoring_state(self) -> MazeState:
+        lowest_scoring_state = self.states[0]
+        for state in self.states[1:]:
+            if state.score < lowest_scoring_state.score:
+                lowest_scoring_state = state
+        return lowest_scoring_state
+
+    def get_state_that_visited(self, xy: tuple[int, int]) -> MazeState | None:
+        for state in self.states:
+            if xy in state.visited:
+                return state
+        return None
+
+    def resolve_overlap(self, state: MazeState) -> bool:
+        overlapping_state = self.get_state_that_visited(state.xy)
+        if overlapping_state is None:
+            return True
+        if overlapping_state.score < state.score:
+            return False
+        if overlapping_state.score > state.score:
+            self.states.remove(overlapping_state)
+        return True
+
+    def find_lowest_score(self) -> int:
+        while self.states:
+            lowest_scoring_state = self.lowest_scoring_state
+            self.states.remove(lowest_scoring_state)
+            for state in lowest_scoring_state.get_next_states():
+                if not self.resolve_overlap(state):
+                    continue
+                if state.is_finished:
+                    return state.score
+                self.states.append(state)
+        raise IndexError
+
+
 def part1(filepath: str) -> int:
     data = read_input(filepath)
-    states = MazeState.from_str(data).get_winning_states()
-    return MazeState.get_lowest_score(states)
+    return MazeStateManager.from_str(data).find_lowest_score()
 
 
 if __name__ == "__main__":
