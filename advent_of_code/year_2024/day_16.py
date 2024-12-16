@@ -35,8 +35,8 @@ type Move = tuple[Direction, int]
 class Maze:
     def __init__(
         self,
-        height: int,
         width: int,
+        height: int,
         end: tuple[int, int],
         walls: set[tuple[int, int]],
     ) -> None:
@@ -76,10 +76,15 @@ class MazeState:
         return states
 
     @property
+    def footprint(self) -> tuple[tuple[int, int], tuple[int, int]]:
+        return (self.xy, self.direction)
+
+    @property
     def is_finished(self) -> bool:
         return self.xy == self.maze.end
 
     def __str__(self) -> str:
+        print(self.maze.width, self.maze.height)
         grid = [[" "] * self.maze.width for _ in range(self.maze.height)]
         for x, y in self.maze.walls:
             grid[y][x] = "#"
@@ -93,6 +98,7 @@ class MazeState:
 class MazeStateManager:
     def __init__(self, states: list[MazeState]) -> None:
         self.states = states
+        self.footprints = {states[0].footprint: states[0].score}
 
     @classmethod
     def from_str(cls, data: str) -> Self:
@@ -117,31 +123,21 @@ class MazeStateManager:
                 lowest_scoring_state = state
         return lowest_scoring_state
 
-    def get_state_that_visited(self, xy: tuple[int, int]) -> MazeState | None:
-        for state in self.states:
-            if xy in state.visited:
-                return state
-        return None
-
-    def resolve_overlap(self, state: MazeState) -> bool:
-        overlapping_state = self.get_state_that_visited(state.xy)
-        if overlapping_state is None:
-            return True
-        if overlapping_state.score < state.score:
-            return False
-        if overlapping_state.score > state.score:
-            self.states.remove(overlapping_state)
-        return True
-
     def find_lowest_score(self) -> int:
         while self.states:
             lowest_scoring_state = self.lowest_scoring_state
+            # print(lowest_scoring_state)
+            # input()
             self.states.remove(lowest_scoring_state)
             for state in lowest_scoring_state.get_next_states():
-                if not self.resolve_overlap(state):
+                score = self.footprints.get(state.footprint, None)
+                if score is not None and score < state.score:
                     continue
                 if state.is_finished:
+                    with open("output/2024_16", "w") as file:
+                        file.write(str(state))
                     return state.score
+                self.footprints[state.footprint] = state.score
                 self.states.append(state)
         raise IndexError
 
