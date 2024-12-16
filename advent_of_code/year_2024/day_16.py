@@ -84,7 +84,6 @@ class MazeState:
         return self.xy == self.maze.end
 
     def __str__(self) -> str:
-        print(self.maze.width, self.maze.height)
         grid = [[" "] * self.maze.width for _ in range(self.maze.height)]
         for x, y in self.maze.walls:
             grid[y][x] = "#"
@@ -98,6 +97,7 @@ class MazeState:
 class MazeStateManager:
     def __init__(self, states: list[MazeState]) -> None:
         self.states = states
+        self.finished_states: list[MazeState] = []
         self.footprints = {states[0].footprint: states[0].score}
 
     @classmethod
@@ -126,20 +126,25 @@ class MazeStateManager:
     def find_lowest_score(self) -> int:
         while self.states:
             lowest_scoring_state = self.lowest_scoring_state
-            # print(lowest_scoring_state)
-            # input()
+            if (
+                self.finished_states
+                and lowest_scoring_state.score > self.finished_states[0].score
+            ):
+                break
             self.states.remove(lowest_scoring_state)
             for state in lowest_scoring_state.get_next_states():
                 score = self.footprints.get(state.footprint, None)
                 if score is not None and score < state.score:
                     continue
                 if state.is_finished:
-                    with open("output/2024_16", "w") as file:
-                        file.write(str(state))
-                    return state.score
-                self.footprints[state.footprint] = state.score
-                self.states.append(state)
-        raise IndexError
+                    self.finished_states.append(state)
+                else:
+                    self.footprints[state.footprint] = state.score
+                    self.states.append(state)
+        return self.finished_states[0].score
+
+    def count_best_tiles_to_sit(self) -> int:
+        return len({xy for state in self.finished_states for xy in state.visited})
 
 
 def part1(filepath: str) -> int:
@@ -147,8 +152,19 @@ def part1(filepath: str) -> int:
     return MazeStateManager.from_str(data).find_lowest_score()
 
 
+def part2(filepath: str) -> int:
+    data = read_input(filepath)
+    manager = MazeStateManager.from_str(data)
+    manager.find_lowest_score()
+    return manager.count_best_tiles_to_sit()
+
+
 if __name__ == "__main__":
     start = perf_counter()
     result = part1(INPUT_FILEPATH)
     seconds = perf_counter() - start
     print(f"Part 1: {result:>20} {seconds:>20.1f}s")
+    start = perf_counter()
+    result = part2(INPUT_FILEPATH)
+    seconds = perf_counter() - start
+    print(f"Part 2: {result:>20} {seconds:>20.1f}s")
