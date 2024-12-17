@@ -9,6 +9,7 @@ from advent_of_code.year_2024.day_17 import part1, part2
         pytest.param(1, "4,6,3,5,6,3,5,2,1,0"),
         pytest.param(2, "0,1,2"),
         pytest.param(3, "4,2,5,6,7,7,7,7,3,1,0"),
+        pytest.param(4, "0,3,5,4,3,0"),
     ],
 )
 def test_part1(file_suffix: int, expected: str) -> None:

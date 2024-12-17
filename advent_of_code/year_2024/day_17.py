@@ -39,7 +39,7 @@ class Computer:
         return (0, 1, 2, 3, self.a, self.b, self.c)[operand]
 
     def adv(self, operand: int) -> None:
-        self.a = self.a // 2 ** self.combo(operand)
+        self.a = self.a >> self.combo(operand)
 
     def bxl(self, operand: int) -> None:
         self.b = self.b ^ operand
@@ -58,12 +58,13 @@ class Computer:
         self.output.append(self.combo(operand) % 8)
 
     def bdv(self, operand: int) -> None:
-        self.b = self.a // 2 ** self.combo(operand)
+        self.b = self.a >> self.combo(operand)
 
     def cdv(self, operand: int) -> None:
-        self.c = self.a // 2 ** self.combo(operand)
+        self.c = self.a >> self.combo(operand)
 
-    def execute_instruction(self, opcode: int, operand: int) -> None:
+    def execute_instruction(self) -> None:
+        opcode, operand = self.program[self.i : self.i + 2]
         (
             self.adv,
             self.bxl,
@@ -76,14 +77,23 @@ class Computer:
         )[opcode](operand)
 
     def run_program(self) -> str:
-        print(self)
         while self.i < len(self.program):
-            opcode, operand = self.program[self.i : self.i + 2]
-            self.execute_instruction(opcode, operand)
-            # print(self)
-            # input()
+            self.execute_instruction()
             self.i += 2
         return ",".join(str(n) for n in self.output)
+
+    def get_first_output(self) -> int:
+        while not self.output:
+            self.execute_instruction()
+            self.i += 2
+        return self.output[0]
+
+    def reset(self, a: int) -> None:
+        self.a = a
+        self.b = 0
+        self.c = 0
+        self.i = 0
+        self.output = []
 
     def __str__(self) -> str:
         return (
@@ -95,16 +105,25 @@ class Computer:
             f"\n{self.output}"
         )
 
+
 def part1(filepath: str) -> str:
     data = read_input(filepath)
     return Computer().parse_input(data).run_program()
 
 
-# def part2(filepath: str) -> int:
-#     data = read_input(filepath)
-#     manager = MazeStateManager.from_str(data)
-#     manager.find_lowest_score()
-#     return manager.count_best_tiles_to_sit()
+def part2(filepath: str) -> int:
+    data = read_input(filepath)
+    computer = Computer().parse_input(data)
+    a_heads = [0]
+    for instruction in computer.program[::-1]:
+        new_a_heads = []
+        for a in [(a_head << 3) + a_tail for a_head in a_heads for a_tail in range(8)]:
+            computer.reset(a)
+            output = computer.get_first_output()
+            if output == instruction:
+                new_a_heads.append(a)
+        a_heads = new_a_heads
+    return min(a_heads)
 
 
 if __name__ == "__main__":
@@ -112,7 +131,8 @@ if __name__ == "__main__":
     result = part1(INPUT_FILEPATH)
     seconds = perf_counter() - start
     print(f"Part 1: {result:>20} {seconds:>20.1f}s")
-    # start = perf_counter()
-    # result = part2(INPUT_FILEPATH)
-    # seconds = perf_counter() - start
-    # print(f"Part 2: {result:>20} {seconds:>20.1f}s")
+
+    start = perf_counter()
+    result2 = part2(INPUT_FILEPATH)
+    seconds = perf_counter() - start
+    print(f"Part 2: {result2:>20} {seconds:>20.1f}s")
