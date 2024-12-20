@@ -1,6 +1,6 @@
+from functools import cache
 from pathlib import Path
 from time import perf_counter
-from functools import cache
 
 INPUT_FILEPATH = "data/2024_19"
 
@@ -10,104 +10,64 @@ def read_input(filepath: str) -> str:
         return file.read()
 
 
-def check_design(design: str, patterns: set[str], i_max: int, depth: int = 0) -> bool:
-    if design in patterns:
-        return True
+def is_possible(design: str, patterns: set[str], max_pattern_len: int) -> bool:
     design_len = len(design)
-    for i in range(min(i_max, design_len), 0, -1):
-        # print(depth, design[:i])
-        # input()
-        if design[:i] in patterns and check_design(
-            design[i:], patterns, i_max, depth + 1
-        ):
+    max_i = min(max_pattern_len, design_len)
+    for i in range(max_i, 0, -1):
+        if design[:i] not in patterns:
+            continue
+        if i == design_len or is_possible(design[i:], patterns, max_pattern_len):
             return True
     return False
 
-def number_of_combos(design: str, patterns: set[str], i_max: int, depth = 0) -> int:
-    combos = 0
-    design_len = len(design)
-    for i in range(min(i_max, design_len), 0, -1):
-        # print(depth, design[:i], design[:i] in patterns)
-        # input()
-        if design[:i] in patterns:
-            if design[i:]:
-                combos += number_of_combos(design[i:], patterns, i_max, depth + 1)
-            else:
-                # print(design)
-                combos += 1
-                # print("WOMBO COMBO")
 
-    return combos
+def simplify_patterns(patterns: set[str], max_pattern_len: int) -> set[str]:
+    return {
+        pattern
+        for pattern in patterns
+        if not is_possible(pattern, patterns - {pattern}, max_pattern_len)
+    }
+
+
+def count_combinations(design: str, patterns: set[str], max_pattern_len: int) -> int:
+    @cache
+    def _count_combinations(design: str) -> int:
+        design_len = len(design)
+        max_i = min(max_pattern_len, len(design))
+        combos = 0
+        for i in range(max_i, 0, -1):
+            if design[:i] not in patterns:
+                continue
+            if i == design_len:
+                combos += 1
+            else:
+                combos += _count_combinations(design[i:])
+        return combos
+
+    return _count_combinations(design)
 
 
 def part1(filepath: str) -> int:
     data = read_input(filepath)
     pattern_data, design_data = data.split("\n\n")
     patterns = set(pattern_data.split(", "))
-    # print(len(patterns))
-    max_len = max(len(pattern) for pattern in patterns)
-    patterns_to_keep = set()
-    for pattern in patterns:
-        if not check_design(pattern, patterns - {pattern}, max_len):
-            patterns_to_keep.add(pattern)
-    # print(len(patterns_to_keep))
-    for pattern in sorted(patterns_to_keep):
-        pass
-        # print(pattern)
-    # input()
-    # singleton_patterns = "|".join(pattern for pattern in patterns if len(pattern) == 1)
-
-    total = 0
-    for design in design_data.split("\n"):
-        result = check_design(design, patterns_to_keep, max_len)
-        total += result
-        # print(design, result)
-    return total
-    # return sum(check_design(design, patterns) for design in design_data.split("\n"))
+    max_pattern_len = max(len(pattern) for pattern in patterns)
+    simplified_patterns = simplify_patterns(patterns, max_pattern_len)
+    return sum(
+        is_possible(design, simplified_patterns, max_pattern_len)
+        for design in design_data.split("\n")
+    )
 
 
 def part2(filepath: str) -> int:
     data = read_input(filepath)
     pattern_data, design_data = data.split("\n\n")
     patterns = set(pattern_data.split(", "))
-    # print(len(patterns))
-    max_len = max(len(pattern) for pattern in patterns)
-    patterns_to_keep = set()
-    for pattern in patterns:
-        if not check_design(pattern, patterns - {pattern}, max_len):
-            patterns_to_keep.add(pattern)
-    # print(len(patterns_to_keep))
-    for pattern in sorted(patterns_to_keep):
-        # print(pattern)
-        pass
-    # input()
-    # singleton_patterns = "|".join(pattern for pattern in patterns if len(pattern) == 1)
-
-    @cache
-    def number_of_combos_(design: str) -> int:
-        combos = 0
-        design_len = len(design)
-        for i in range(min(max_len, design_len), 0, -1):
-            # print(depth, design[:i], design[:i] in patterns)
-            # input()
-            if design[:i] in patterns:
-                if design[i:]:
-                    combos += number_of_combos_(design[i:])
-                else:
-                    # print(design)
-                    combos += 1
-                    # print("WOMBO COMBO")
-
-        return combos
-
-    total = 0
-    for design in design_data.split("\n"):
-        if check_design(design, patterns_to_keep, max_len):
-            result = number_of_combos_(design)
-            total += result
-            print(design, result)
-    return total
-    # return sum(check_design(design, patterns) for design in design_data.split("\n"))
+    max_pattern_len = max(len(pattern) for pattern in patterns)
+    return sum(
+        count_combinations(design, patterns, max_pattern_len)
+        for design in design_data.split("\n")
+    )
 
 
 if __name__ == "__main__":
@@ -115,7 +75,8 @@ if __name__ == "__main__":
     result1 = part1(INPUT_FILEPATH)
     seconds = perf_counter() - start
     print(f"Part 1: {result1:>20} {seconds:>20.1f}s")
+
     start = perf_counter()
     result2 = part2(INPUT_FILEPATH)
     seconds = perf_counter() - start
-    print(f"Part 1: {result2:>20} {seconds:>20.1f}s")
+    print(f"Part 2: {result2:>20} {seconds:>20.1f}s")
