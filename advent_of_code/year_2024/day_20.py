@@ -1,3 +1,4 @@
+from collections.abc import Generator
 from pathlib import Path
 from time import perf_counter
 from typing import Self
@@ -10,22 +11,15 @@ def read_input(filepath: str) -> str:
         return file.read()
 
 
-def get_adjacent(xy: tuple[int, int]) -> list[tuple[int, int]]:
+def get_adjacent(xy: tuple[int, int]) -> Generator[tuple[int, int]]:
     x, y = xy
-    return [(x + 1, y), (x, y + 1), (x - 1, y), (x, y - 1)]
+    yield from ((x + 1, y), (x, y + 1), (x - 1, y), (x, y - 1))
 
 
 class Map:
     def __init__(
-        self,
-        width: int,
-        height: int,
-        start: tuple[int, int],
-        end: tuple[int, int],
-        walls: set[tuple[int, int]],
+        self, start: tuple[int, int], end: tuple[int, int], walls: set[tuple[int, int]]
     ) -> None:
-        self.width = width
-        self.height = height
         self.start = start
         self.end = end
         self.walls = walls
@@ -41,27 +35,17 @@ class Map:
                     start = (x, y)
                 elif char == "E":
                     end = (x, y)
-        return cls(x + 1, y + 1, start, end, walls)
+        return cls(start, end, walls)
 
     def get_path(self) -> list[tuple[int, int]]:
-        xys = [self.start]
-        visited: dict[tuple[int, int], tuple[int, int] | None] = {self.start: None}
-        while xys:
-            new_xys = []
-            for xy in xys:
-                for new_xy in get_adjacent(xy):
-                    if new_xy in visited or new_xy in self.walls:
-                        continue
-                    new_xys.append(new_xy)
-                    visited[new_xy] = xy
-                    if new_xy == self.end:
-                        break
-            xys = new_xys
-        xy_: tuple[int, int] | None = self.end
-        path = []
-        while xy_ is not None:
-            path.append(xy_)
-            xy_ = visited[xy_]
+        previous: tuple[int, int] | None = None
+        path = [self.start]
+        while path[-1] != self.end:
+            for xy in get_adjacent(path[-1]):
+                if xy != previous and xy not in self.walls:
+                    previous = path[-1]
+                    path.append(xy)
+                    break
         return path
 
 
@@ -72,7 +56,7 @@ def count_cheats(
     for i, (x1, y1) in enumerate(path):
         for steps_cut, (x2, y2) in enumerate(path[i + min_steps_saved :]):
             cheat_steps = abs(x2 - x1) + abs(y2 - y1)
-            if cheat_steps <= cheat_duration and steps_cut >= cheat_steps:
+            if cheat_steps <= cheat_duration and cheat_steps <= steps_cut:
                 total += 1
     return total
 
