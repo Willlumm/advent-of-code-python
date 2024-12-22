@@ -1,4 +1,3 @@
-from collections import defaultdict
 from pathlib import Path
 from time import perf_counter
 from typing import Self
@@ -44,7 +43,7 @@ class Map:
                     end = (x, y)
         return cls(x + 1, y + 1, start, end, walls)
 
-    def get_shortest_path(self) -> list[tuple[int, int]]:
+    def get_path(self) -> list[tuple[int, int]]:
         xys = [self.start]
         visited: dict[tuple[int, int], tuple[int, int] | None] = {self.start: None}
         while xys:
@@ -65,57 +64,37 @@ class Map:
             xy_ = visited[xy_]
         return path
 
-    def get_skippable_walls(self) -> list[tuple[int, int]]:
-        return [
-            (x, y)
-            for x, y in self.walls
-            if sum(
-                True
-                for adj_x, adj_y in get_adjacent((x, y))
-                if (adj_x, adj_y) not in self.walls
-                and self.width > adj_x >= 0
-                and self.height > adj_y >= 0
-            )
-            > 1
-        ]
 
-    def __str__(self) -> str:
-        grid = [[" "] * self.width for _ in range(self.height)]
-        for x, y in self.walls:
-            grid[y][x] = "#"
-        grid[self.start[1]][self.start[0]] = "S"
-        grid[self.end[1]][self.end[0]] = "E"
-        return "\n".join("".join(row) for row in grid)
-
-
-def get_delta_path_len_counts(maze: Map) -> defaultdict[int, int]:
-    shortest_path_len = len(maze.get_shortest_path())
-    delta_path_len_counts: defaultdict[int, int] = defaultdict(int)
-    for xy in maze.get_skippable_walls():
-        maze.walls.remove(xy)
-        # print(maze)
-        delta_path_len = shortest_path_len - len(maze.get_shortest_path())
-        if delta_path_len > 0:
-            delta_path_len_counts[delta_path_len] += 1
-        maze.walls.add(xy)
-    return delta_path_len_counts
+def count_cheats(
+    path: list[tuple[int, int]], cheat_duration: int, min_steps_saved: int
+) -> int:
+    total = 0
+    for i, (x1, y1) in enumerate(path):
+        for steps_cut, (x2, y2) in enumerate(path[i + min_steps_saved :]):
+            cheat_steps = abs(x2 - x1) + abs(y2 - y1)
+            if cheat_steps <= cheat_duration and steps_cut >= cheat_steps:
+                total += 1
+    return total
 
 
 def part1(filepath: str) -> int:
-    min_delta_path_len = 100
     data = read_input(filepath)
-    maze = Map.from_str(data)
-    delta_path_len_counts = get_delta_path_len_counts(maze)
-    # print(delta_path_len_counts)
-    return sum(
-        True
-        for delta_path_len in delta_path_len_counts
-        if delta_path_len >= min_delta_path_len
-    )
+    path = Map.from_str(data).get_path()
+    return count_cheats(path, 2, 100)
+
+
+def part2(filepath: str) -> int:
+    data = read_input(filepath)
+    path = Map.from_str(data).get_path()
+    return count_cheats(path, 20, 100)
 
 
 if __name__ == "__main__":
     start = perf_counter()
-    result1 = part1(INPUT_FILEPATH)
+    result = part1(INPUT_FILEPATH)
     seconds = perf_counter() - start
-    print(f"Part 1: {result1:>20} {seconds:>20.1f}s")
+    print(f"Part 1: {result:>20} {seconds:>20.1f}s")
+    start = perf_counter()
+    result = part2(INPUT_FILEPATH)
+    seconds = perf_counter() - start
+    print(f"Part 2: {result:>20} {seconds:>20.1f}s")
